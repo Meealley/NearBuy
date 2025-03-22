@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:next_door/presentation/auth/auth_screen.dart';
+import 'package:next_door/presentation/auth/forgot_password.dart';
 import 'package:next_door/presentation/auth/login_screen.dart';
 import 'package:next_door/presentation/onboardingscreen/onboarding_screen.dart';
 import 'package:next_door/routes/pages.dart';
@@ -26,6 +27,11 @@ class AppRouter {
             path: Pages.login,
             name: Pages.login,
             builder: (context, state) => LoginScreen(),
+          ),
+          GoRoute(
+            path: Pages.forgotPassword,
+            name: Pages.forgotPassword,
+            builder: (context, state) => ForgotPassword(),
           ),
         ],
       );

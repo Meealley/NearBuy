@@ -42,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        backgroundColor: AppColors.white,
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
@@ -137,7 +138,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text("Remember Me"),
-                              Text("Forgot Password?"),
+                              GestureDetector(
+                                onTap: () => context.go(Pages.forgotPassword),
+                                child: Text("Forgot Password?"),
+                              ),
                             ],
                           ),
                           SizedBox(
