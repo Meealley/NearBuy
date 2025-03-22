@@ -20,14 +20,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _emailController = TextEditingController();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _emailController.dispose();
   }
@@ -59,6 +57,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               ),
               Form(
                 key: _formKey,
+                autovalidateMode: _autovalidateMode,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

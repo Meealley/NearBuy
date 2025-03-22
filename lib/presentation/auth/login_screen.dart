@@ -1,9 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_door/routes/pages.dart';
 import 'package:next_door/theme/app_colors.dart';
 import 'package:next_door/utils/custom_text_field.dart';
+import 'package:next_door/utils/email_validator.dart';
+import 'package:next_door/utils/password_validator.dart';
 import 'package:next_door/utils/wave_clipper.dart';
 import 'package:sizer/sizer.dart';
 
@@ -16,12 +21,16 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
   late TextEditingController _emailController, _passwordController;
+
+  String? _email, _password;
+  bool _obscureText = true;
+  bool _loadWithProgress = false;
+  bool _rememberMe = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     _emailController = TextEditingController();
@@ -30,11 +39,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
 
     _emailController.dispose();
     _passwordController.dispose();
+  }
+
+  void _submit() {
+    setState(() {
+      _autovalidateMode = AutovalidateMode.always;
+      final form = _formKey.currentState;
+
+      if (form == null || !form.validate()) return;
+
+      form.save();
+
+      _loadWithProgress = !_loadWithProgress;
+      log("email: $_email, password: $_password");
+    });
   }
 
   @override
@@ -106,16 +128,47 @@ class _LoginScreenState extends State<LoginScreen> {
                             textInputType: TextInputType.text,
                             textEditingController: _emailController,
                             labelText: 'Email address',
+                            validator: (value) {
+                              return emailValidator(value);
+                            },
+                            onSaved: (String? value) {
+                              setState(() {
+                                _email = value;
+                              });
+                            },
                           ),
                           SizedBox(height: 2.h),
                           CustomTextField(
                             textInputType: TextInputType.text,
                             textEditingController: _passwordController,
                             labelText: 'Password',
+                            obscureText: _obscureText,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? FontAwesomeIcons.eyeSlash
+                                    : FontAwesomeIcons.eye,
+                                size: 17.sp,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText =
+                                      !_obscureText; // Toggle visibility
+                                });
+                              },
+                            ),
+                            validator: (value) {
+                              return passwordValidator(value);
+                            },
+                            onSaved: (value) {
+                              setState(() {
+                                _password = value;
+                              });
+                            },
                           ),
                           SizedBox(height: 2.h),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.background,
                               padding: const EdgeInsets.symmetric(
@@ -137,7 +190,37 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Remember Me"),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  left: 9.sp,
+                                ),
+                                child: Row(
+                                  // mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      height: 8,
+                                      width: 8,
+                                      child: Checkbox(
+                                        value: _rememberMe,
+                                        onChanged: (bool? value) {
+                                          setState(() {
+                                            _rememberMe = value!;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 2.w,
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {},
+                                      child: Text(
+                                        "Remember Me",
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               GestureDetector(
                                 onTap: () => context.go(Pages.forgotPassword),
                                 child: Text("Forgot Password?"),

@@ -1,11 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_door/routes/pages.dart';
 import 'package:next_door/theme/app_colors.dart';
 import 'package:next_door/utils/custom_text_field.dart';
+import 'package:next_door/utils/email_validator.dart';
+import 'package:next_door/utils/password_validator.dart';
 import 'package:next_door/utils/wave_clipper.dart';
 import 'package:sizer/sizer.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:validators/validators.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -16,15 +23,19 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
   late TextEditingController _nameController,
       _emailController,
       _passwordController,
       _confirmPasswordController;
 
+  String? _name, _email, _password;
+  bool _obscureText = true;
+  bool _obscureTextConfirmPassword = true;
+  bool _loadWithProgress = false;
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _nameController = TextEditingController();
     _emailController = TextEditingController();
@@ -34,12 +45,25 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+  }
+
+  void _submit() {
+    setState(() {
+      _autovalidateMode = AutovalidateMode.always;
+      final form = _formKey.currentState;
+
+      if (form == null || !form.validate()) return;
+
+      form.save();
+
+      _loadWithProgress = !_loadWithProgress;
+      log("name: $_name, email: $_email, password: $_password");
+    });
   }
 
   @override
@@ -110,28 +134,90 @@ class _AuthScreenState extends State<AuthScreen> {
                             textInputType: TextInputType.text,
                             textEditingController: _nameController,
                             labelText: 'Enter your name',
+                            validator: (String? value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return "Name is required";
+                              }
+                              if (value.trim().length < 2) {
+                                return "Name must be at least 2 characters";
+                              }
+                              return null;
+                            },
+                            onSaved: (String? value) {
+                              _name = value;
+                            },
                           ),
                           SizedBox(height: 2.h),
                           CustomTextField(
                             textInputType: TextInputType.text,
                             textEditingController: _emailController,
                             labelText: 'Email address',
+                            validator: (value) {
+                              return emailValidator(value);
+                            },
+                            onSaved: (String? value) {
+                              setState(() {
+                                _email = value;
+                              });
+                            },
                           ),
                           SizedBox(height: 2.h),
                           CustomTextField(
                             textInputType: TextInputType.text,
                             textEditingController: _passwordController,
                             labelText: 'Password',
+                            obscureText: _obscureText,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? FontAwesomeIcons.eyeSlash
+                                    : FontAwesomeIcons.eye,
+                                size: 17.sp,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText =
+                                      !_obscureText; // Toggle visibility
+                                });
+                              },
+                            ),
+                            validator: (value) {
+                              return passwordValidator(value);
+                            },
+                            onSaved: (value) {
+                              setState(() {
+                                _password = value;
+                              });
+                            },
                           ),
                           SizedBox(height: 2.h),
                           CustomTextField(
-                            textInputType: TextInputType.text,
+                            labelText: "Confirm Password",
+                            textInputType: TextInputType.visiblePassword,
                             textEditingController: _confirmPasswordController,
-                            labelText: 'Confirm password',
+                            obscureText: _obscureTextConfirmPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureTextConfirmPassword
+                                    ? FontAwesomeIcons.eyeSlash
+                                    : FontAwesomeIcons.eye,
+                                size: 17.sp,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureTextConfirmPassword =
+                                      !_obscureTextConfirmPassword; // Toggle visibility
+                                });
+                              },
+                            ),
+                            validator: (value) {
+                              return confirmPasswordValidator(
+                                  value, _passwordController.text);
+                            },
                           ),
                           SizedBox(height: 2.h),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.background,
                               padding: const EdgeInsets.symmetric(

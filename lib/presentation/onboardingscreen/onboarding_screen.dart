@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,9 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _navigateToAuthScreen(BuildContext context) {
     // Navigate to the auth screen
-    context.go('/auth'); // Using go_router navigation
-    // Alternatively if you're using a different router:
-    // Navigator.of(context).pushReplacementNamed('/auth');
+    context.go('/auth');
   }
 
   @override

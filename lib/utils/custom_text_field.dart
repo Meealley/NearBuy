@@ -31,7 +31,8 @@ class CustomTextField extends StatelessWidget {
     return TextFormField(
       keyboardType: textInputType,
       controller: textEditingController,
-      // style: obscureText ? AppTextStyles.bodyText : AppTextStyles.bodySmall,
+      style:
+          obscureText ? TextStyle(fontSize: 17.sp) : TextStyle(fontSize: 16.sp),
       validator: validator,
       onSaved: onSaved,
       obscureText: obscureText, // Use the passed obscureText value
@@ -56,16 +57,16 @@ class CustomTextField extends StatelessWidget {
             Radius.circular(10),
           ),
           borderSide: BorderSide(
-              // color: AppColors.backgroundDark,
-              ),
+            color: Colors.black,
+          ),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(
             Radius.circular(10),
           ),
           borderSide: BorderSide(
-              // color: AppColors.backgroundDark,
-              ),
+            color: Colors.black,
+          ),
         ),
         suffixIcon: suffixIcon, // Set the suffix icon for toggling visibility
       ),
