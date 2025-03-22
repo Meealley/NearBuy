@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
       body: Column(
         children: [
           Center(
-            child: Text("How are you"),
+            child: Text("Please be informed that this is the home page"),
           )
         ],
       ),

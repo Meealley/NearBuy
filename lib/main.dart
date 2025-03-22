@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:next_door/cubits/cubit/onboarding_cubit.dart';
+import 'package:next_door/cubits/onboarding/onboarding_cubit.dart';
+import 'package:next_door/cubits/signin/signin_cubit.dart';
 import 'package:next_door/firebase_options.dart';
+import 'package:next_door/repository/auth_repository.dart';
 import 'package:next_door/routes/app_router.dart';
 import 'package:next_door/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,20 +19,28 @@ void main() async {
   final showOnboarding = prefs.getBool('showOnboarding') ?? true;
   runApp(NextBuyApp(
     showOnboarding: showOnboarding,
+    authRepository: AuthRepository(),
   ));
 }
 
 class NextBuyApp extends StatelessWidget {
   final bool showOnboarding;
-  const NextBuyApp({super.key, required this.showOnboarding});
+  final AuthRepository authRepository;
+
+  const NextBuyApp(
+      {super.key, required this.showOnboarding, required this.authRepository});
 
   @override
   Widget build(BuildContext context) {
     final appRouter = AppRouter(showOnboarding: showOnboarding);
+
     return MultiBlocProvider(
       providers: [
         BlocProvider<OnboardingCubit>(
           create: (context) => OnboardingCubit(),
+        ),
+        BlocProvider<SigninCubit>(
+          create: (context) => SigninCubit(authRepository: authRepository),
         ),
       ],
       child: Sizer(

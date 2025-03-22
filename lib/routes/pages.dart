@@ -3,4 +3,5 @@ class Pages {
   static const auth = '/auth';
   static const login = '/login';
   static const forgotPassword = '/forgotPassword';
+  static const homeScreen = '/homeScreen';
 }

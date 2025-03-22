@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:next_door/cubits/cubit/onboarding_cubit.dart';
+import 'package:next_door/cubits/onboarding/onboarding_cubit.dart';
 import 'package:next_door/presentation/onboardingscreen/onboarding_text_widget.dart';
 import 'package:next_door/theme/app_colors.dart';
 import 'package:next_door/utils/wave_clipper.dart';
