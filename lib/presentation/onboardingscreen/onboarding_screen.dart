@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, invalid_use_of_visible_for_testing_member
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -110,6 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         final currentPage =
                             context.read<OnboardingCubit>().state.currentPage;
                         if (index != currentPage) {
+                          // ignore: invalid_use_of_protected_member
                           context.read<OnboardingCubit>().emit(context
                               .read<OnboardingCubit>()
                               .state

@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:next_door/models/user_model.dart';
 import 'package:next_door/repository/auth_repository.dart';
 import 'package:next_door/utils/custom_error.dart';
 

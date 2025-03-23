@@ -12,6 +12,7 @@ import 'package:next_door/utils/custom_text_field.dart';
 import 'package:next_door/utils/email_validator.dart';
 import 'package:next_door/utils/password_validator.dart';
 import 'package:next_door/utils/wave_clipper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    _loadCredentials();
   }
 
   @override
@@ -45,6 +47,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
     _emailController.dispose();
     _passwordController.dispose();
+  }
+
+  // Load credentials from shared preferences
+  Future<void> _loadCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+      if (_rememberMe) {
+        _emailController.text = prefs.getString('savedEmail') ?? '';
+        _passwordController.text = prefs.getString('savedPassword') ?? '';
+      }
+    });
+  }
+
+  // Saved credentials when login is successful
+  Future<void> _saveCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setString('savedEmail', _emailController.text);
+      await prefs.setString('savedPassword', _passwordController.text);
+    } else {
+      await prefs.remove('savedEmail');
+      await prefs.remove('savedPassword');
+    }
+    await prefs.setBool('rememberMe', _rememberMe);
   }
 
   void _submit() {
@@ -69,8 +96,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<LoginCubit, LoginState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.logInStatus == LogInStatus.success) {
+          await _saveCredentials();
           context.go(Pages.homeScreen);
         } else if (state.logInStatus == LogInStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -234,11 +262,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       SizedBox(
                                         width: 2.w,
                                       ),
-                                      GestureDetector(
-                                        onTap: () {},
-                                        child: Text(
-                                          "Remember Me",
-                                        ),
+                                      Text(
+                                        "Remember Me",
                                       ),
                                     ],
                                   ),

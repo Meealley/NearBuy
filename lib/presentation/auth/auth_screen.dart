@@ -8,14 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:next_door/cubits/signin/signin_cubit.dart';
 import 'package:next_door/routes/pages.dart';
 import 'package:next_door/theme/app_colors.dart';
-import 'package:next_door/utils/custom_error.dart';
 import 'package:next_door/utils/custom_text_field.dart';
 import 'package:next_door/utils/email_validator.dart';
 import 'package:next_door/utils/password_validator.dart';
 import 'package:next_door/utils/wave_clipper.dart';
 import 'package:sizer/sizer.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:validators/validators.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
