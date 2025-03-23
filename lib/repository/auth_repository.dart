@@ -3,7 +3,9 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive/hive.dart';
 import 'package:next_door/constants/constants.dart';
+import 'package:next_door/models/user_hive.dart';
 import 'package:next_door/models/user_model.dart';
 
 /// Exception thrown when the email provided is already in use
@@ -31,6 +33,7 @@ class AuthRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
+  final Box _authBox = Hive.box('authBox');
 
   AuthRepository({
     firebase_auth.FirebaseAuth? firebaseAuth,
@@ -46,8 +49,14 @@ class AuthRepository {
       if (firebaseUser == null) {
         return UserModel.empty;
       }
-      return await _getUserFromFirestore(firebaseUser.uid) ??
-          UserModel.fromFirebaseUser(firebaseUser);
+
+      final firestoreUser = await _getUserFromFirestore(firebaseUser.uid);
+      if (firestoreUser != null) {
+        _saveUserToHive(firestoreUser);
+        return firestoreUser;
+      }
+
+      return UserModel.fromFirebaseUser(firebaseUser);
     });
   }
 
@@ -56,7 +65,9 @@ class AuthRepository {
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
       if (doc.exists) {
-        return UserModel.fromFirestore(doc);
+        final user = UserModel.fromFirestore(doc);
+        _saveUserToHive(user); // Store in Hive
+        return user;
       }
       return null;
     } catch (e) {
@@ -67,6 +78,12 @@ class AuthRepository {
 
   /// Returns the current user
   Future<UserModel> getCurrentUser() async {
+    // Checks if user exists in Hive
+    final hiveUser = _getUserFromHive();
+    if (hiveUser != null) {
+      return hiveUser;
+    }
+
     final firebaseUser = _firebaseAuth.currentUser;
     if (firebaseUser == null) {
       return UserModel.empty;
@@ -80,6 +97,10 @@ class AuthRepository {
 
     // Fallback to creating from Firebase user
     return UserModel.fromFirebaseUser(firebaseUser);
+  }
+
+  bool isUserLoggedIn() {
+    return _firebaseAuth.currentUser != null;
   }
 
   // Register user with Email and Password
@@ -118,6 +139,7 @@ class AuthRepository {
       );
 
       await firestore.collection('users').doc(user.uid).set(newUser.toMap());
+      _saveUserToHive(newUser);
       return newUser;
     } on firebase_auth.FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
@@ -133,5 +155,81 @@ class AuthRepository {
     } catch (_) {
       throw GenericAuthException();
     }
+  }
+
+  // Login with email and password
+
+  Future<UserModel> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = credential.user;
+      if (user == null) {
+        throw GenericAuthException();
+      }
+
+      // Update last login time
+      await firestore.collection('users').doc(user.uid).update({
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      });
+      // Convert Firebase user to UserModel
+      final userModel = await _getUserFromFirestore(user.uid) ??
+          UserModel.fromFirebaseUser(user);
+
+      _saveUserToHive(userModel);
+
+      return userModel;
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        throw UserNotFoundException();
+      } else if (e.code == 'wrong-password') {
+        throw WrongPasswordException();
+      } else if (e.code == 'invalid-email') {
+        throw InvalidEmailException();
+      }
+      throw GenericAuthException();
+    } catch (_) {
+      throw GenericAuthException();
+    }
+  }
+
+// Save user to Hive Storage
+  void _saveUserToHive(UserModel user) {
+    final hiveUser = UserHive(
+      id: user.id,
+      email: user.email,
+    );
+    _authBox.put("currentUser", hiveUser);
+  }
+
+  /// Get user from Hive storage
+  UserModel? _getUserFromHive() {
+    final hiveUser = _authBox.get('currentUser') as UserHive?;
+    if (hiveUser == null) return null;
+
+    return UserModel(
+      id: hiveUser.id,
+      firstname: "", // Placeholder since Hive doesn't store this
+      lastname: "",
+      email: hiveUser.email,
+      profileImageUrl: null,
+      location: null,
+      address: null,
+      isLocationSet: false,
+      createdAt: DateTime.now(),
+      lastLoginAt: DateTime.now(),
+    );
+  }
+
+  // Signout user and clear hive storage
+  Future<void> signOut() async {
+    await _firebaseAuth.signOut();
+    await _authBox.delete("currentUser");
   }
 }

@@ -1,9 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:next_door/cubits/cubit/login_cubit.dart';
 import 'package:next_door/cubits/onboarding/onboarding_cubit.dart';
 import 'package:next_door/cubits/signin/signin_cubit.dart';
 import 'package:next_door/firebase_options.dart';
+import 'package:next_door/models/user_hive.dart';
 import 'package:next_door/repository/auth_repository.dart';
 import 'package:next_door/routes/app_router.dart';
 import 'package:next_door/theme/app_colors.dart';
@@ -12,6 +16,14 @@ import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  //Reigester Hive
+  Hive.registerAdapter(UserHiveAdapter());
+
+  await Hive.openBox('authBox');
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -32,7 +44,7 @@ class NextBuyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appRouter = AppRouter(showOnboarding: showOnboarding);
+    final appRouter = AppRouter(showOnboarding: showOnboarding, authRepository);
 
     return MultiBlocProvider(
       providers: [
@@ -41,6 +53,9 @@ class NextBuyApp extends StatelessWidget {
         ),
         BlocProvider<SigninCubit>(
           create: (context) => SigninCubit(authRepository: authRepository),
+        ),
+        BlocProvider<LoginCubit>(
+          create: (context) => LoginCubit(authRepository: authRepository),
         ),
       ],
       child: Sizer(

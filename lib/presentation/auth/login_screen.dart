@@ -1,9 +1,11 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:next_door/cubits/cubit/login_cubit.dart';
 import 'package:next_door/routes/pages.dart';
 import 'package:next_door/theme/app_colors.dart';
 import 'package:next_door/utils/custom_text_field.dart';
@@ -56,254 +58,275 @@ class _LoginScreenState extends State<LoginScreen> {
 
       _loadWithProgress = !_loadWithProgress;
       log("email: $_email, password: $_password");
+
+      context.read<LoginCubit>().logIn(
+            email: _email!,
+            password: _password!,
+          );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: AppColors.white,
-        resizeToAvoidBottomInset: false,
-        body: Stack(
-          children: [
-            // Background Image (Covers Halfway)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ClipPath(
-                clipper: WaveClipper(),
-                child: Container(
-                  height: MediaQuery.of(context).size.height *
-                      0.5, // 40% of screen height
+    return BlocListener<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state.logInStatus == LogInStatus.success) {
+          context.go(Pages.homeScreen);
+        } else if (state.logInStatus == LogInStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Login failed"),
+              backgroundColor: AppColors.background,
+            ),
+          );
+        }
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          backgroundColor: AppColors.white,
+          resizeToAvoidBottomInset: false,
+          body: Stack(
+            children: [
+              // Background Image (Covers Halfway)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ClipPath(
+                  clipper: WaveClipper(),
+                  child: Container(
+                    height: MediaQuery.of(context).size.height *
+                        0.5, // 40% of screen height
 
-                  color: AppColors.background,
+                    color: AppColors.background,
+                  ),
                 ),
               ),
-            ),
 
-            // Login Form (Foreground)
-            Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 3.w),
-                child: Container(
-                  padding: const EdgeInsets.all(15.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(26),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 39,
-                        spreadRadius: 9,
-                      ),
-                    ],
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    autovalidateMode: _autovalidateMode,
-                    child: SizedBox(
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          Text(
-                            "Log into",
-                            style: TextStyle(
-                                fontSize: 22.sp, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            "your account",
-                            style: TextStyle(
-                                fontSize: 22.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.background),
-                          ),
-                          SizedBox(
-                            height: 2.h,
-                          ),
-                          SizedBox(height: 2.h),
-                          CustomTextField(
-                            textInputType: TextInputType.text,
-                            textEditingController: _emailController,
-                            labelText: 'Email address',
-                            validator: (value) {
-                              return emailValidator(value);
-                            },
-                            onSaved: (String? value) {
-                              setState(() {
-                                _email = value;
-                              });
-                            },
-                          ),
-                          SizedBox(height: 2.h),
-                          CustomTextField(
-                            textInputType: TextInputType.text,
-                            textEditingController: _passwordController,
-                            labelText: 'Password',
-                            obscureText: _obscureText,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureText
-                                    ? FontAwesomeIcons.eyeSlash
-                                    : FontAwesomeIcons.eye,
-                                size: 17.sp,
-                              ),
-                              onPressed: () {
+              // Login Form (Foreground)
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 3.w),
+                  child: Container(
+                    padding: const EdgeInsets.all(15.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(26),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 39,
+                          spreadRadius: 9,
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: _autovalidateMode,
+                      child: SizedBox(
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: [
+                            Text(
+                              "Log into",
+                              style: TextStyle(
+                                  fontSize: 22.sp, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "your account",
+                              style: TextStyle(
+                                  fontSize: 22.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.background),
+                            ),
+                            SizedBox(
+                              height: 2.h,
+                            ),
+                            SizedBox(height: 2.h),
+                            CustomTextField(
+                              textInputType: TextInputType.text,
+                              textEditingController: _emailController,
+                              labelText: 'Email address',
+                              validator: (value) {
+                                return emailValidator(value);
+                              },
+                              onSaved: (String? value) {
                                 setState(() {
-                                  _obscureText =
-                                      !_obscureText; // Toggle visibility
+                                  _email = value;
                                 });
                               },
                             ),
-                            validator: (value) {
-                              return passwordValidator(value);
-                            },
-                            onSaved: (value) {
-                              setState(() {
-                                _password = value;
-                              });
-                            },
-                          ),
-                          SizedBox(height: 2.h),
-                          ElevatedButton(
-                            onPressed: _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.background,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 40, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: Text(
-                              "Login",
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 1.h,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  left: 9.sp,
+                            SizedBox(height: 2.h),
+                            CustomTextField(
+                              textInputType: TextInputType.text,
+                              textEditingController: _passwordController,
+                              labelText: 'Password',
+                              obscureText: _obscureText,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureText
+                                      ? FontAwesomeIcons.eyeSlash
+                                      : FontAwesomeIcons.eye,
+                                  size: 17.sp,
                                 ),
-                                child: Row(
-                                  // mainAxisAlignment: MainAxisAlignment.start,
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureText =
+                                        !_obscureText; // Toggle visibility
+                                  });
+                                },
+                              ),
+                              validator: (value) {
+                                return passwordValidator(value);
+                              },
+                              onSaved: (value) {
+                                setState(() {
+                                  _password = value;
+                                });
+                              },
+                            ),
+                            SizedBox(height: 2.h),
+                            ElevatedButton(
+                              onPressed: _loadWithProgress ? null : _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _loadWithProgress
+                                    ? AppColors.buttonLoading
+                                    : AppColors.background,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 40, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                _loadWithProgress ? "Loading..." : "Login in",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 1.h,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    left: 9.sp,
+                                  ),
+                                  child: Row(
+                                    // mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        height: 8,
+                                        width: 8,
+                                        child: Checkbox(
+                                          value: _rememberMe,
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              _rememberMe = value!;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 2.w,
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {},
+                                        child: Text(
+                                          "Remember Me",
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => context.go(Pages.forgotPassword),
+                                  child: Text("Forgot Password?"),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 3.h,
+                            ),
+                            Column(
+                              children: [
+                                Center(
+                                  child: Text("or log in with"),
+                                ),
+                                SizedBox(
+                                  height: 2.h,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    SizedBox(
-                                      height: 8,
-                                      width: 8,
-                                      child: Checkbox(
-                                        value: _rememberMe,
-                                        onChanged: (bool? value) {
-                                          setState(() {
-                                            _rememberMe = value!;
-                                          });
-                                        },
+                                    CircleAvatar(
+                                      backgroundColor: AppColors.grey,
+                                      radius: 3.h,
+                                      child: CircleAvatar(
+                                        radius: 3.h - 1,
+                                        backgroundColor: AppColors.white,
+                                        child: Center(
+                                          child: SvgPicture.asset(
+                                            "assets/images/Apple.svg",
+                                            width: 36, // Adjust size as needed
+                                            height: 36,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     SizedBox(
-                                      width: 2.w,
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {},
-                                      child: Text(
-                                        "Remember Me",
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () => context.go(Pages.forgotPassword),
-                                child: Text("Forgot Password?"),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 3.h,
-                          ),
-                          Column(
-                            children: [
-                              Center(
-                                child: Text("or log in with"),
-                              ),
-                              SizedBox(
-                                height: 2.h,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppColors.grey,
-                                    radius: 3.h,
-                                    child: CircleAvatar(
-                                      radius: 3.h - 1,
-                                      backgroundColor: AppColors.white,
-                                      child: Center(
+                                        width: 16), // Add spacing between icons
+                                    CircleAvatar(
+                                      radius: 3.h,
+                                      backgroundColor: AppColors.grey,
+                                      child: CircleAvatar(
+                                        radius: 3.h - 1,
+                                        backgroundColor: AppColors.white,
                                         child: SvgPicture.asset(
-                                          "assets/images/Apple.svg",
+                                          "assets/images/google_icon.svg",
                                           width: 36, // Adjust size as needed
                                           height: 36,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                      width: 16), // Add spacing between icons
-                                  CircleAvatar(
-                                    radius: 3.h,
-                                    backgroundColor: AppColors.grey,
-                                    child: CircleAvatar(
-                                      radius: 3.h - 1,
-                                      backgroundColor: AppColors.white,
-                                      child: SvgPicture.asset(
-                                        "assets/images/google_icon.svg",
-                                        width: 36, // Adjust size as needed
-                                        height: 36,
-                                      ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 2.h,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("Don't have an account?"),
+                                    SizedBox(
+                                      width: 1.w,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 2.h,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text("Don't have an account?"),
-                                  SizedBox(
-                                    width: 1.w,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () => context.go(Pages.auth),
-                                    child: Text(
-                                      "Sign Up",
-                                      style: TextStyle(
-                                        decoration: TextDecoration.underline,
+                                    GestureDetector(
+                                      onTap: () => context.go(Pages.auth),
+                                      child: Text(
+                                        "Sign Up",
+                                        style: TextStyle(
+                                          decoration: TextDecoration.underline,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                ],
-                              )
-                            ],
-                          )
-                        ],
+                                    )
+                                  ],
+                                )
+                              ],
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

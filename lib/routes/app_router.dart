@@ -4,15 +4,18 @@ import 'package:next_door/presentation/auth/forgot_password.dart';
 import 'package:next_door/presentation/auth/login_screen.dart';
 import 'package:next_door/presentation/home.dart';
 import 'package:next_door/presentation/onboardingscreen/onboarding_screen.dart';
+import 'package:next_door/repository/auth_repository.dart';
 import 'package:next_door/routes/pages.dart';
 
 class AppRouter {
   final bool showOnboarding;
 
-  AppRouter({required this.showOnboarding});
+  final AuthRepository authRepository;
+
+  AppRouter(this.authRepository, {required this.showOnboarding});
 
   GoRouter get router => GoRouter(
-        initialLocation: showOnboarding ? Pages.onboarding : Pages.auth,
+        initialLocation: showOnboarding ? Pages.onboarding : Pages.login,
         routes: [
           GoRoute(
             path: Pages.onboarding,
@@ -40,5 +43,20 @@ class AppRouter {
             builder: (context, state) => HomePage(),
           ),
         ],
+        redirect: (context, state) {
+          final isLoggedIn = authRepository.isUserLoggedIn();
+          final currentPath = state.uri.path; // Alternative to subloc
+
+          final isAuthPage =
+              currentPath == Pages.auth || currentPath == Pages.login;
+
+          if (isLoggedIn && isAuthPage) {
+            return Pages
+                .homeScreen; // Redirect logged-in users away from auth pages
+          } else if (!isLoggedIn && currentPath == Pages.homeScreen) {
+            return Pages.login; // Redirect non-logged-in users to auth page
+          }
+          return null; // No redirection needed
+        },
       );
 }

@@ -282,9 +282,11 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               SizedBox(height: 2.h),
                               ElevatedButton(
-                                onPressed: _submit,
+                                onPressed: _loadWithProgress ? null : _submit,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.background,
+                                  backgroundColor: _loadWithProgress
+                                      ? AppColors.buttonLoading
+                                      : AppColors.background,
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 40, vertical: 12),
                                   shape: RoundedRectangleBorder(
@@ -292,7 +294,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  _loadWithProgress ? "Loading.." : "Sign up",
+                                  _loadWithProgress ? "Loading..." : "Sign up",
                                   style: TextStyle(
                                     color: Colors.white,
                                   ),

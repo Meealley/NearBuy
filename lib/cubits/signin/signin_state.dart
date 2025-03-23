@@ -27,7 +27,7 @@ class SigninState extends Equatable {
 
   SigninState copyWith({
     SignInStatus? signInStatus,
-    UserModel? user,
+    // UserModel? user,
     CustomError? error,
   }) {
     return SigninState(
